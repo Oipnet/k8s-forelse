@@ -1,0 +1,14 @@
+[Interface]
+PrivateKey = {{ ansible_local.wg_keys.this_node_privkey }}
+Address = {{ wireguard_address }}
+ListenPort = {{ wg_port }}
+
+{% if wireguard_peers is defined and wireguard_peers | length > 0 %}
+{% for peer in wireguard_peers %}
+[Peer]
+PublicKey = {{ peer.public_key }}
+Endpoint = {{ peer.endpoint }}
+AllowedIPs = {{ peer.allowed_ips }}
+PersistentKeepalive = 25
+{% endfor %}
+{% endif %}

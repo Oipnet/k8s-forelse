@@ -1,0 +1,21 @@
+---
+- name: Vérifier si Flannel est déjà installé
+  command: kubectl get daemonset kube-flannel-ds -n kube-system
+  register: flannel_status
+  failed_when: false
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Déployer le CNI Flannel si non présent
+  command: kubectl apply -f {{ k8s_cni_manifest_url }}
+  when: flannel_status.rc != 0
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  notify:
+    - Attendre que le CNI Flannel soit prêt
+
+- name: Debug statut initial de Flannel
+  debug:
+    msg: "Flannel déjà présent, skip déploiement"
+  when: flannel_status.rc == 0

@@ -1,0 +1,5 @@
+- name: Redémarrer containerd
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: true

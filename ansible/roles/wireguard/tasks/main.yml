@@ -1,0 +1,43 @@
+---
+# Tâches existantes pour la génération des clés etc.
+- name: Installer WireGuard
+  apt:
+    name: wireguard
+    state: present
+    update_cache: true
+
+- name: Créer le dossier WireGuard
+  file:
+    path: /etc/wireguard
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+# ... vos autres tâches pour générer/charger les clés ...
+
+- name: Construire la liste des peers WireGuard
+  set_fact:
+    wireguard_peers: >-
+      {%- set peers = [] -%}
+      {%- for host in groups['all'] if host != inventory_hostname -%}
+      {%- set _ = peers.append({
+            'public_key': hostvars[host].ansible_local.wg_keys.this_node_pubkey,
+            'endpoint': hostvars[host].ansible_host + ':' + wg_port|string,
+            'allowed_ips': hostvars[host].wireguard_address + '/32'
+          }) -%}
+      {%- endfor -%}
+      {{ peers }}
+
+
+# Tâche pour générer le fichier wg0.conf
+- name: Générer le fichier wg0.conf
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    owner: root
+    group: root
+    mode: '0600'
+  notify:
+    - Stop WireGuard
+    - Start WireGuard

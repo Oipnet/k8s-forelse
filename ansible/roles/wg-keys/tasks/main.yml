@@ -1,0 +1,68 @@
+---
+- name: Installer WireGuard
+  apt:
+    name: wireguard
+    state: present
+    update_cache: true
+
+- name: Créer le dossier WireGuard
+  file:
+    path: /etc/wireguard
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Générer la clé privée si elle n'existe pas
+  command: wg genkey
+  register: generated_wg_privkey
+  when: not lookup('file', '/etc/wireguard/privatekey', errors='ignore')
+  changed_when: true
+  no_log: true
+
+- name: Sauvegarder la clé privée
+  copy:
+    dest: /etc/wireguard/privatekey
+    content: "{{ generated_wg_privkey.stdout }}"
+    mode: "0600"
+  when: generated_wg_privkey is defined
+
+- name: Lire la clé privée (toujours)
+  command: cat /etc/wireguard/privatekey
+  register: wg_privkey
+  changed_when: false
+  no_log: true
+
+- name: Générer la clé publique si elle n'existe pas
+  command: bash -c "echo '{{ wg_privkey.stdout }}' | wg pubkey"
+  register: wg_pubkey
+  when: not lookup('file', '/etc/wireguard/publickey', errors='ignore')
+  changed_when: true
+
+- name: Sauvegarder la clé publique
+  copy:
+    dest: /etc/wireguard/publickey
+    content: "{{ wg_pubkey.stdout }}"
+    mode: "0644"
+  when: wg_pubkey is defined
+
+- name: Lire la clé publique (toujours)
+  command: cat /etc/wireguard/publickey
+  register: wg_pubkey
+  changed_when: false
+
+- name: Créer le dossier facts.d s'il n'existe pas
+  file:
+    path: /etc/ansible/facts.d
+    state: directory
+    mode: "0755"
+
+- name: Créer un fait Ansible local contenant les clés
+  copy:
+    dest: /etc/ansible/facts.d/wg_keys.fact
+    content: |
+      {
+        "this_node_privkey": "{{ wg_privkey.stdout }}",
+        "this_node_pubkey": "{{ wg_pubkey.stdout }}"
+      }
+    mode: "0644"

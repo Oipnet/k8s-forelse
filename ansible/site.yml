@@ -1,0 +1,58 @@
+---
+- name: Déployer la configuration WireGuard
+  hosts: all
+  become: true
+
+  roles:
+    - role: wg-keys     # Génère les clés WireGuard et les stocke dans /etc/ansible/facts.d
+    - role: wireguard   # Configure WireGuard (wg0.conf, service, etc.)
+    - role: ufw         # Active et configure le firewall UFW (ports SSH, WireGuard, etc.)
+
+- name: Installer kubeadm et kubelet sur tous les nœuds (masters + workers)
+  hosts: masters:workers
+  become: true
+  roles:
+    - kubernetes
+
+- name: Installer kubectl uniquement sur les masters
+  hosts: masters
+  become: true
+  tasks:
+    - name: Installer kubectl
+      apt:
+        name: kubectl
+        state: present
+        update_cache: yes
+
+- name: Installer containerd sur tous les nœuds
+  hosts: masters:workers
+  become: true
+  roles:
+    - containerd
+
+- name: Initialiser le cluster Kubernetes
+  hosts: master-1
+  become: true
+  roles:
+    - kubeadm_init
+
+- name: Générer le token kubeadm
+  hosts: master-1
+  become: true
+  roles:
+    - role: kubeadm_token
+      tags: kubeadm_token
+
+- name: Intégrer les nœuds au cluster Kubernetes
+  hosts: master-2,workers
+  become: true
+  roles:
+    - role: kubeadm_join
+      tags: kubeadm_join
+
+- name: Deployer CNI (Flannel) sur les masters
+  hosts: master-1
+  become: true
+  roles:
+    - role: k8s_cni
+      tags: cni

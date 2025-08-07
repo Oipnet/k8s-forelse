@@ -1,0 +1,8 @@
+- name: Vérifier si le nœud est déjà joint
+  stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet_conf
+
+- name: Intégrer le nœud au cluster avec kubeadm join
+  shell: "{{ hostvars['master-1'].kubeadm_join_command }}"
+  when: not kubelet_conf.stat.exists

@@ -1,0 +1,9 @@
+---
+- name: Attendre que le CNI Flannel soit prêt
+  command: kubectl get pods -n kube-system -l app=flannel -o jsonpath="{.items[*].status.containerStatuses[*].ready}"
+  register: flannel_ready
+  retries: 20
+  delay: 10
+  until: flannel_ready.stdout.find("false") == -1
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf

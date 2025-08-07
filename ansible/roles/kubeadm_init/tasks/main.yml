@@ -1,0 +1,36 @@
+# roles/kubeadm_init/tasks/main.yml
+
+- name: Initialiser le cluster Kubernetes avec kubeadm
+  command: >
+    kubeadm init
+    --apiserver-advertise-address={{ wireguard_address }}
+    --pod-network-cidr=10.244.0.0/16
+    --ignore-preflight-errors=Swap
+  args:
+    creates: /etc/kubernetes/admin.conf
+  register: kubeadm_output
+  tags: kubeadm_init
+
+- name: Sauvegarder la commande join pour les workers
+  copy:
+    dest: /root/kubeadm_join_command.sh
+    content: |
+      #!/bin/bash
+      {{ kubeadm_output.stdout_lines | select('search', '^kubeadm join') | list | join('\n') }}
+    mode: '0700'
+  tags: kubeadm_init
+
+- name: Configurer kubectl pour root
+  file:
+    path: /root/.kube
+    state: directory
+    mode: '0700'
+  tags: kubeadm_init
+
+- name: Copier le fichier kubeconfig pour kubectl
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    remote_src: true
+    mode: '0600'
+  tags: kubeadm_init

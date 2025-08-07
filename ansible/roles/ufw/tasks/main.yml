@@ -1,0 +1,32 @@
+---
+- name: Installer UFW
+  apt:
+    name: ufw
+    state: present
+    update_cache: true
+  notify: Activer UFW
+
+- name: Autoriser le port SSH
+  ufw:
+    rule: allow
+    port: "22"
+
+- name: Autoriser le port WireGuard
+  ufw:
+    rule: allow
+    port: "51820"
+    proto: udp
+
+- name: Autoriser l’accès à l’API Kubernetes (port 6443)
+  ufw:
+    rule: allow
+    port: "6443"
+    proto: tcp
+  when: "'masters' in group_names"
+
+- name: Autoriser le port 10250 pour Kubelet logs (read-only port)
+  ufw:
+    rule: allow
+    port: "10250"
+    proto: tcp
+  when: "'lb-1' not in group_names"

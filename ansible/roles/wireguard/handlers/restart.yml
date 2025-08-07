@@ -1,0 +1,17 @@
+- name: Reset failed state (systemd)
+  command: systemctl reset-failed wg-quick@wg0
+  changed_when: false
+  failed_when: false
+
+- name: Stop WireGuard
+  systemd:
+    name: wg-quick@wg0
+    state: stopped
+    enabled: yes
+  ignore_errors: true
+
+- name: Start WireGuard
+  systemd:
+    name: wg-quick@wg0
+    state: started
+    enabled: yes

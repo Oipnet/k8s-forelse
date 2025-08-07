@@ -1,0 +1,14 @@
+---
+# Tâches principales du rôle kubernetes
+
+- name: Inclure les tâches de configuration réseau
+  import_tasks: network.yml
+
+- name: Ajouter le dépôt Kubernetes et la clé GPG
+  import_tasks: repo.yml
+
+- name: Installer les paquets Kubernetes (kubeadm, kubelet, kubectl)
+  import_tasks: install.yml
+
+- name: Empêcher kubelet d'être mis à jour automatiquement
+  import_tasks: hold.yml
