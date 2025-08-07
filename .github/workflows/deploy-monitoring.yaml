@@ -26,15 +26,18 @@ jobs:
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo update
 
-      - name: ✅ Déployer la stack kube-prometheus-stack
+      - name: 🛠️ Créer le fichier kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${KUBECONFIG}" > ~/.kube/config
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
+
+      - name: ✅ Déployer la stack kube-prometheus-stack
         run: |
           helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
             --namespace monitoring --create-namespace \
             -f monitoring/helm-values/kube-prometheus-stack-values.yaml
 
       - name: 🌎 Afficher l'état des pods
-        env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
         run: kubectl get pods -n monitoring -o wide
