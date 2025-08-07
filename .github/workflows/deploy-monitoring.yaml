@@ -1,0 +1,40 @@
+name: Deploy Monitoring Stack
+
+on:
+  push:
+    paths:
+      - 'monitoring/**'
+    branches:
+      - main
+
+jobs:
+  deploy-monitoring:
+    name: Déploiement de la stack de monitoring
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ↓ Cloner le dépôt
+        uses: actions/checkout@v4
+
+      - name: 🚀 Installer Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.14.0
+
+      - name: 🤧 Ajouter le repo prometheus-community
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+
+      - name: ✅ Déployer la stack kube-prometheus-stack
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        run: |
+          helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+            --namespace monitoring --create-namespace \
+            -f monitoring/helm-values/kube-prometheus-stack-values.yaml
+
+      - name: 🌎 Afficher l'état des pods
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        run: kubectl get pods -n monitoring -o wide

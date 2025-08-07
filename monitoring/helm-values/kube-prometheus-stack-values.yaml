@@ -1,0 +1,90 @@
+# monitoring/values.yaml
+
+# Global configuration
+global:
+  rbac:
+    create: true
+
+# Prometheus settings
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    retention: 15d
+    resources:
+      requests:
+        memory: 400Mi
+        cpu: 200m
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 8Gi
+
+# Grafana settings
+grafana:
+  enabled: true
+  defaultDashboardsEnabled: true
+  adminPassword: "admin"  # Change it for production
+  persistence:
+    enabled: true
+    size: 5Gi
+    accessModes:
+      - ReadWriteOnce
+  service:
+    type: NodePort  # Change to LoadBalancer or ClusterIP based on setup
+    nodePort: 32000
+  plugins:
+    - grafana-piechart-panel
+    - grafana-worldmap-panel
+  dashboards:
+    default:
+      # Dashboards will be auto-imported here
+      # See dashboardProviders below
+      node-exporter:
+        gnetId: 1860
+        revision: 27
+        datasource: Prometheus
+
+# Alertmanager settings
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 1
+    resources:
+      requests:
+        memory: 200Mi
+        cpu: 100m
+
+# Node Exporter
+prometheus-node-exporter:
+  enabled: true
+
+# Kube-state-metrics
+kube-state-metrics:
+  enabled: true
+
+# Service Monitors
+kubeControllerManager:
+  enabled: true
+kubeScheduler:
+  enabled: true
+coreDns:
+  enabled: true
+kubeEtcd:
+  enabled: true
+kubeProxy:
+  enabled: true
+
+# Additional configuration
+defaultRules:
+  create: true
+  rules:
+    etcd: true
+    kubeApiserver: true
+    kubeControllerManager: true
+    kubeScheduler: true
+    kubelet: true
+    node: true
