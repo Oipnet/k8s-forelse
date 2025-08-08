@@ -32,7 +32,9 @@ jobs:
       - name: 📂 Préparer le kubeconfig
         run: |
           mkdir -p ~/.kube
-          cp /root/.kube/config ~/.kube/config
+          if [ ! -f ~/.kube/config ]; then
+            cp /etc/kubernetes/admin.conf ~/.kube/config
+          fi
           chmod 600 ~/.kube/config
         env:
           KUBECONFIG: /root/.kube/config
