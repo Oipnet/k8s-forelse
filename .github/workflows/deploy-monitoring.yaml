@@ -39,12 +39,17 @@ jobs:
         env:
           KUBECONFIG: /root/.kube/config
 
+      - name: 🏗️ Créer le namespace monitoring s’il n’existe pas
+        run: |
+          kubectl get ns monitoring || kubectl create ns monitoring
+        env:
+          KUBECONFIG: /root/.kube/config
+
       - name: 🔍 Vérifier les différences Helm
         id: helm_diff
         run: |
           DIFF=$(helm diff upgrade monitoring prometheus-community/kube-prometheus-stack \
             --namespace monitoring \
-            --create-namespace \
             -f monitoring/helm-values/kube-prometheus-stack-values.yaml || true)
 
           echo "$DIFF"
@@ -54,6 +59,8 @@ jobs:
           else
             echo "diff=true" >> $GITHUB_OUTPUT
           fi
+        env:
+          KUBECONFIG: /root/.kube/config
 
       - name: 🚀 Déploiement via Helm
         if: steps.helm_diff.outputs.diff == 'true'
