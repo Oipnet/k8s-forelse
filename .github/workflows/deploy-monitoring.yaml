@@ -45,3 +45,5 @@ jobs:
 
       - name: 🌎 Afficher l'état des pods
         run: kubectl get pods -n monitoring -o wide
+        env:
+          KUBECONFIG: /root/.kube/config
