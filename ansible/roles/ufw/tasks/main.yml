@@ -1,4 +1,3 @@
----
 - name: Installer UFW
   apt:
     name: ufw
@@ -30,3 +29,71 @@
     port: "10250"
     proto: tcp
   when: "'lb-1' not in group_names"
+
+# —————————————
+# 📦 Ports nécessaires pour le serveur NFS (sur master-1 uniquement)
+# —————————————
+
+- name: 🔓 Autoriser port 2049 (NFS) TCP
+  ufw:
+    rule: allow
+    port: 2049
+    proto: tcp
+    from_ip: 10.0.0.0/8
+  when: inventory_hostname == "master-1"
+
+- name: 🔓 Autoriser port 2049 (NFS) UDP
+  ufw:
+    rule: allow
+    port: 2049
+    proto: udp
+    from_ip: 10.0.0.0/8
+  when: inventory_hostname == "master-1"
+
+- name: 🔓 Autoriser port 111 (portmapper) TCP
+  ufw:
+    rule: allow
+    port: 111
+    proto: tcp
+    from_ip: 10.0.0.0/8
+  when: inventory_hostname == "master-1"
+
+- name: 🔓 Autoriser port 111 (portmapper) UDP
+  ufw:
+    rule: allow
+    port: 111
+    proto: udp
+    from_ip: 10.0.0.0/8
+  when: inventory_hostname == "master-1"
+
+- name: 🔓 Autoriser port 20048 (mountd) TCP
+  ufw:
+    rule: allow
+    port: 20048
+    proto: tcp
+    from_ip: 10.0.0.0/8
+  when: inventory_hostname == "master-1"
+
+- name: 🔓 Autoriser port 20048 (mountd) UDP
+  ufw:
+    rule: allow
+    port: 20048
+    proto: udp
+    from_ip: 10.0.0.0/8
+  when: inventory_hostname == "master-1"
+
+- name: 🔓 Autoriser port 42989 (nlockmgr) TCP
+  ufw:
+    rule: allow
+    port: 42989
+    proto: tcp
+    from_ip: 10.0.0.0/8
+  when: inventory_hostname == "master-1"
+
+- name: 🔓 Autoriser port 41915 (nlockmgr) UDP
+  ufw:
+    rule: allow
+    port: 41915
+    proto: udp
+    from_ip: 10.0.0.0/8
+  when: inventory_hostname == "master-1"

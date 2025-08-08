@@ -34,16 +34,15 @@
     fi
   notify: Redémarrer le service GitHub Actions runner
 
+- name: Vérifier si le service systemd du runner existe déjà
+  stat:
+    path: "/etc/systemd/system/actions.runner.Oipnet-k8s-forelse.{{ inventory_hostname }}.service"
+  register: runner_service_file
+
 - name: 🧷 Installer le service systemd
-  become: true
+  shell: ./svc.sh install
   args:
     chdir: "{{ github_runner_dir }}"
-  shell: ./svc.sh install
-  when: ansible_facts.services['actions.runner.Oipnet-k8s-forelse.' + inventory_hostname + '.service'] is not defined
-
-- name: ▶️ Démarrer et activer le runner
   become: true
-  systemd:
-    name: "actions.runner.Oipnet-k8s-forelse.{{ inventory_hostname }}.service"
-    state: started
-    enabled: true
+  when: not runner_service_file.stat.exists
+  notify: 🟢 Lancer le runner GitHub

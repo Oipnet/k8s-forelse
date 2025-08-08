@@ -1,49 +1,47 @@
-name: Deploy Monitoring Stack
+name: Déploiement de la stack de monitoring
 
 on:
-  push:
-    paths:
-      - 'monitoring/**'
-    branches:
-      - main
   workflow_dispatch:
-    # Permet de déclencher manuellement le workflow depuis l'interface GitHub
 
 jobs:
-  deploy-monitoring:
-    name: Déploiement de la stack de monitoring
+  deploy:
+    name: 🚀 Déploiement du monitoring
     runs-on: self-hosted
 
     steps:
-      - name: ↓ Cloner le dépôt
+      - name: 🧾 Récupérer le dépôt
         uses: actions/checkout@v4
 
-      - name: 🚀 Installer Helm
+      - name: 📥 Installer Helm
         uses: azure/setup-helm@v3
-        with:
-          version: v3.14.0
 
-      - name: 🤧 Ajouter le repo prometheus-community
+      - name: 📦 Ajouter le dépôt Helm du NFS Provisioner
         run: |
+          helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo update
 
-      - name: 📄 Utiliser admin.conf comme KUBECONFIG
+      - name: 🚀 Déployer le NFS Provisioner
         run: |
-          mkdir -p ~/.kube
-          cp /etc/kubernetes/admin.conf ~/.kube/config
-          chmod 600 ~/.kube/config
-        shell: bash
+          helm upgrade --install nfs-subdir-external-provisioner \
+            nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+            --namespace kube-system --create-namespace \
+            --set nfs.server=10.42.0.1 \
+            --set nfs.path=/srv/nfs/kubedata \
+            --set storageClass.name=nfs-storage \
+            --set storageClass.defaultClass=true
+        env:
+          KUBECONFIG: /root/.kube/config
 
-      - name: ✅ Déployer la stack kube-prometheus-stack
+      - name: 📋 Vérifier la création de la StorageClass
+        run: kubectl get storageclass
+        env:
+          KUBECONFIG: /root/.kube/config
+
+      - name: 📊 Déployer kube-prometheus-stack
         run: |
           helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
             --namespace monitoring --create-namespace \
             -f monitoring/helm-values/kube-prometheus-stack-values.yaml
-        env:
-          KUBECONFIG: /root/.kube/config
-
-      - name: 🌎 Afficher l'état des pods
-        run: kubectl get pods -n monitoring -o wide
         env:
           KUBECONFIG: /root/.kube/config

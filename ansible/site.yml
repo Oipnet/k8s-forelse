@@ -63,3 +63,9 @@
 
   roles:
     - github_runner
+
+- name: Déployer le serveur NFS
+  hosts: master-1
+  become: true
+  roles:
+    - nfs_server
