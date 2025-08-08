@@ -1,0 +1,49 @@
+- name: 🧰 Créer le dossier du runner
+  become: true
+  file:
+    path: "{{ github_runner_dir }}"
+    state: directory
+    owner: "{{ github_runner_user }}"
+    group: "{{ github_runner_user }}"
+    mode: "0755"
+
+- name: 📦 Télécharger le runner GitHub
+  become: true
+  get_url:
+    url: "{{ github_runner_download_url }}"
+    dest: "/tmp/actions-runner.tar.gz"
+    mode: "0644"
+
+- name: 📂 Extraire le runner
+  become: true
+  unarchive:
+    src: "/tmp/actions-runner.tar.gz"
+    dest: "{{ github_runner_dir }}"
+    remote_src: true
+    creates: "{{ github_runner_dir }}/config.sh"
+
+- name: 🔧 Configurer le runner s'il n'est pas déjà configuré
+  become_user: "{{ github_runner_user }}"
+  args:
+    chdir: "{{ github_runner_dir }}"
+  shell: |
+    if [ ! -f .runner ]; then
+      ./config.sh --url "{{ github_runner_repo_url }}" \
+                  --token "{{ github_runner_token }}" \
+                  --unattended --name $(hostname)
+    fi
+  notify: Redémarrer le service GitHub Actions runner
+
+- name: 🧷 Installer le service systemd
+  become: true
+  args:
+    chdir: "{{ github_runner_dir }}"
+  shell: ./svc.sh install
+  when: ansible_facts.services['actions.runner.Oipnet-k8s-forelse.' + inventory_hostname + '.service'] is not defined
+
+- name: ▶️ Démarrer et activer le runner
+  become: true
+  systemd:
+    name: "actions.runner.Oipnet-k8s-forelse.{{ inventory_hostname }}.service"
+    state: started
+    enabled: true

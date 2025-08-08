@@ -1,0 +1,7 @@
+---
+- name: Redémarrer le service GitHub Actions runner
+  become: true
+  systemd:
+    name: "actions.runner.Oipnet-k8s-forelse.{{ inventory_hostname }}.service"
+    state: restarted
+    enabled: true

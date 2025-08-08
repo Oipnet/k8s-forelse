@@ -56,3 +56,10 @@
   roles:
     - role: k8s_cni
       tags: cni
+
+- name: Déployer le runner GitHub Actions auto-hébergé
+  hosts: master-1  # Ou le groupe de machines ciblées
+  become: true
+
+  roles:
+    - github_runner

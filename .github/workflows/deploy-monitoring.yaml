@@ -28,12 +28,11 @@ jobs:
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo update
 
-      - name: 🛠️ Créer le fichier kubeconfig
+      - name: 📄 Utiliser admin.conf comme KUBECONFIG
         run: |
           mkdir -p ~/.kube
-          echo "${KUBECONFIG}" > ~/.kube/config
-        env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+          cp /etc/kubernetes/admin.conf ~/.kube/config
+          chmod 600 ~/.kube/config
 
       - name: ✅ Déployer la stack kube-prometheus-stack
         run: |

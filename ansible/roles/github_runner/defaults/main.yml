@@ -1,0 +1,5 @@
+github_runner_user: "runner"
+github_runner_dir: "/opt/github-runner"
+github_runner_repo_url: "https://github.com/Oipnet/k8s-forelse"
+github_runner_token: ""
+github_runner_download_url: https://github.com/actions/runner/releases/download/v2.316.0/actions-runner-linux-x64-2.316.0.tar.gz
