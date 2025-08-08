@@ -10,3 +10,8 @@
       - kubeadm
       - kubectl
     state: present
+
+- name: Installer nfs-common sur tous les nœuds
+  apt:
+    name: nfs-common
+    state: present

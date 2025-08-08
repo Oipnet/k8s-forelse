@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'monitoring/**'
-      - '.github/workflows/deploy-monitoring.yml'
+      - '.github/workflows/deploy-monitoring.yaml'
   workflow_dispatch:
 
 jobs:
