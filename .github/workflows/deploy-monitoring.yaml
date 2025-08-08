@@ -33,12 +33,15 @@ jobs:
           mkdir -p ~/.kube
           cp /etc/kubernetes/admin.conf ~/.kube/config
           chmod 600 ~/.kube/config
+        shell: bash
 
       - name: ✅ Déployer la stack kube-prometheus-stack
         run: |
           helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
             --namespace monitoring --create-namespace \
             -f monitoring/helm-values/kube-prometheus-stack-values.yaml
+        env:
+          KUBECONFIG: /root/.kube/config
 
       - name: 🌎 Afficher l'état des pods
         run: kubectl get pods -n monitoring -o wide
